@@ -1,2 +1,2 @@
 # Data-Science
-For projects and learning
+Jinkai Mo's projects
