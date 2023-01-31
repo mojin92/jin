@@ -1,0 +1,121 @@
+WITH temptable2 AS
+  (WITH temptable1 AS
+     (SELECT str.goal_id AS strategyid,
+             trim(str.goal_description::text) AS strategy,
+             objg.objective_id AS trackid,
+             trim(objg.objective_name::text) AS track,
+             objp.objective_id,
+             trim(objp.objective_name::text) AS objective,
+             substring(obj.objective_description,(regexp_instr(obj.objective_description, 'ASVs:') + 6), (regexp_instr(obj.objective_description, ']', 2) - 1) - (regexp_instr(obj.objective_description, 'ASVs:') + 6) + 1)AS asv -- ,array_construct("substring"("substring"(obj.custom_textarea_1, "position"(obj.custom_textarea_1, '[ImpactedASVs:'::text) + length('[ImpactedASVs:'::text)), 1, "position"("substring"(obj.custom_textarea_1, "position"(obj.custom_textarea_1, '[ImpactedASVs:'::text) + length('[ImpactedASVs:'::text)), ']'::text) - 1), ','::text) AS asvname
+
+      FROM DEXP_DB.PHDP_DEXP.JA_OBJECTIVE_BC obj
+      JOIN DEXP_DB.PHDP_DEXP.JA_OBJECTIVE_BC objp ON obj.fk_objective_parent_id = objp.objective_id
+      JOIN DEXP_DB.PHDP_DEXP.JA_OBJECTIVE_BC objg ON objp.fk_objective_parent_id = objg.objective_id
+      JOIN DEXP_DB.PHDP_DEXP.JA_GOAL_BC STR ON objg.fk_goal_id = str.goal_id
+      WHERE obj.deleted_flag = 'No'::varchar
+        AND obj.fk_objective_parent_id <> 0
+        AND obj.objective_tier = 'Team'::varchar
+        AND objp.deleted_flag = 'No'::varchar
+        AND objg.deleted_flag = 'No'::varchar
+        AND str.deleted_flag = 'No'::varchar
+        AND obj.objective_description ilike '%[ImpactedASVs: %') SELECT strategyid,
+                                                                        strategy,
+                                                                        trackid,
+                                                                        track,
+                                                                        objective_id,
+                                                                        objective,
+                                                                        a.value AS asvname
+   FROM temptable1,
+        LATERAL split_to_table(temptable1.asv, ',') a),
+     temptable4 AS
+  (WITH temptable3 AS
+     (SELECT str.goal_id AS strategyid,
+             trim(str.goal_description::text) AS strategy,
+             objp.objective_id AS trackid,
+             trim(objp.objective_name::text) AS track,
+             obj.objective_id,
+             trim(obj.objective_name::text) AS objective, --trim(unnest(string_to_array("substring"("substring"(obj.objective_notes, "position"(obj.objective_notes, '[ImpactedASVs:'::text) + length('[ImpactedASVs:'::text)), 1, "position"("substring"(obj.objective_notes, "position"(obj.objective_notes, '[ImpactedASVs:'::text) + length('[ImpactedASVs:'::text)), ']'::text) - 1), ','::text))) AS asvname
+ substring(obj.objective_description,(regexp_instr(obj.objective_description, 'ASVs:') + 6), (regexp_instr(obj.objective_description, ']', 2) - 1) - (regexp_instr(obj.objective_description, 'ASVs:') + 6) + 1)AS asv
+      FROM DEXP_DB.PHDP_DEXP.JA_OBJECTIVE_BC obj
+      JOIN DEXP_DB.PHDP_DEXP.JA_OBJECTIVE_BC objp ON obj.fk_objective_parent_id = objp.objective_id
+      JOIN DEXP_DB.PHDP_DEXP.JA_GOAL_BC STR ON objp.fk_goal_id = str.goal_id
+      WHERE obj.deleted_flag = 'No'::varchar
+        AND obj.objective_tier = 'Program'::varchar
+        AND objp.deleted_flag = 'No'::varchar
+        AND str.deleted_flag = 'No'::varchar
+        AND obj.objective_description ilike '%[ImpactedASVs: %' ) SELECT strategyid,
+                                                                         strategy,
+                                                                         trackid,
+                                                                         track,
+                                                                         objective_id,
+                                                                         objective,
+                                                                         a.value AS asvname
+   FROM temptable3,
+        LATERAL split_to_table(temptable3.asv, ',') a),
+     temptable6 AS
+  (WITH temptable5 AS
+     (SELECT str.goal_id AS strategyid,
+             trim(str.goal_description::text) AS strategy,
+             objp.objective_id AS trackid,
+             trim(objp.objective_name::text) AS track,
+             obj.objective_id,
+             trim(obj.objective_name::text) AS objective, --trim(unnest(string_to_array("substring"("substring"(obj.custom_textarea_1, "position"(obj.custom_textarea_1, '[ImpactedASVs:'::text) + length('[ImpactedASVs:'::text)), 1, "position"("substring"(obj.custom_textarea_1, "position"(obj.custom_textarea_1, '[ImpactedASVs:'::text) + length('[ImpactedASVs:'::text)), ']'::text) - 1), ','::text))) AS asvname
+ substring(obj.objective_description,(regexp_instr(obj.objective_description, 'ASVs:') + 6), (regexp_instr(obj.objective_description, ']', 2) - 1) - (regexp_instr(obj.objective_description, 'ASVs:') + 6) + 1)AS asv
+      FROM DEXP_DB.PHDP_DEXP.JA_OBJECTIVE_BC obj
+      JOIN DEXP_DB.PHDP_DEXP.JA_OBJECTIVE_BC objp ON obj.fk_objective_parent_id = objp.objective_id
+      JOIN DEXP_DB.PHDP_DEXP.JA_GOAL_BC STR ON objp.fk_goal_id = str.goal_id
+      WHERE obj.deleted_flag = 'No'::varchar
+        AND obj.objective_tier = 'Program'::varchar
+        AND objp.deleted_flag = 'No'::varchar
+        AND str.deleted_flag = 'No'::varchar
+        AND obj.objective_description ilike '%[ImpactedASVs: %') SELECT strategyid,
+                                                                        strategy,
+                                                                        trackid,
+                                                                        track,
+                                                                        objective_id,
+                                                                        objective,
+                                                                        a.value AS asvname
+   FROM temptable5,
+        LATERAL split_to_table(temptable5.asv, ',') a),
+     temptable8 AS
+  (WITH temptable7 AS
+     (SELECT str.goal_id AS strategyid,
+             trim(str.goal_description::text) AS strategy,
+             objg.objective_id AS trackid,
+             trim(objg.objective_name::text) AS track,
+             objp.objective_id,
+             trim(objp.objective_name::text) AS objective, --trim(unnest(string_to_array("substring"("substring"(obj.custom_textarea_1, "position"(obj.custom_textarea_1, '[ImpactedASVs:'::text) + length('[ImpactedASVs:'::text)), 1, "position"("substring"(obj.custom_textarea_1, "position"(obj.custom_textarea_1, '[ImpactedASVs:'::text) + length('[ImpactedASVs:'::text)), ']'::text) - 1), ','::text))) AS asvname
+ substring(obj.objective_description,(regexp_instr(obj.objective_description, 'ASVs:') + 6), (regexp_instr(obj.objective_description, ']', 2) - 1) - (regexp_instr(obj.objective_description, 'ASVs:') + 6) + 1)AS asv
+      FROM DEXP_DB.PHDP_DEXP.JA_OBJECTIVE_BC obj
+      JOIN DEXP_DB.PHDP_DEXP.JA_OBJECTIVE_BC objp ON obj.fk_objective_parent_id = objp.objective_id
+      JOIN DEXP_DB.PHDP_DEXP.JA_OBJECTIVE_BC objg ON objp.fk_objective_parent_id = objg.objective_id
+      JOIN DEXP_DB.PHDP_DEXP.JA_GOAL_BC STR ON objg.fk_goal_id = str.goal_id
+      WHERE obj.deleted_flag = 'No'::varchar
+        AND obj.objective_tier = 'Program'::varchar
+        AND objp.deleted_flag = 'No'::varchar
+        AND str.deleted_flag = 'No'::varchar
+        AND obj.objective_description ilike '%ImpactedASVs %') SELECT strategyid,
+                                                                      strategy,
+                                                                      trackid,
+                                                                      track,
+                                                                      objective_id,
+                                                                      objective,
+                                                                      a.value AS asvname
+   FROM temptable7,
+        LATERAL split_to_table(temptable7.asv, ',') a)
+SELECT  ia.strategyid,
+                ia.strategy,
+                ia.trackid,
+                ia.track,
+                ia.objective_id,
+                ia.objective,
+                ia.asvname
+FROM
+  (SELECT *
+   FROM temptable2
+   UNION SELECT *
+   FROM temptable4
+   UNION SELECT *
+   FROM temptable6
+   UNION SELECT *
+   FROM temptable8) AS ia;
